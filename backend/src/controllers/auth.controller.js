@@ -1,6 +1,11 @@
 import bcrypt from "bcryptjs";
+import cloudinary from "../lib/cloudinary.js";
 import { generateToken } from "../lib/utils.js";
-import { loginSchema, signupSchema } from "../lib/validations.js";
+import {
+  loginSchema,
+  signupSchema,
+  updateProfileSchema,
+} from "../lib/validations.js";
 import User from "../models/user.model.js";
 
 export const signup = async (req, res) => {
@@ -75,6 +80,52 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi trong login:", error.message);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
+  }
+};
+
+const extractPublicId = (url) => {
+  if (!url) return null;
+  const parts = url.split("/upload/");
+  if (parts.length < 2) return null;
+  return parts[1].replace(/^v\d+\//, "").replace(/\.[^.]+$/, "");
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const result = updateProfileSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: result.error.issues[0].message });
+    }
+
+    const { profilePic } = result.data;
+
+    const oldPublicId = extractPublicId(req.user.profilePic);
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId);
+    }
+
+    const uploadResult = await cloudinary.uploader.upload(profilePic, {
+      folder: "5-mern-socketio-realtime-chat/profiles",
+    });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePic: uploadResult.secure_url },
+      { new: true },
+    ).select("-password");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Lỗi trong updateProfile:", error.message);
+    res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
+  }
+};
+
+export const checkAuth = (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.error("Lỗi trong checkAuth:", error.message);
     res.status(500).json({ message: "Lỗi máy chủ nội bộ" });
   }
 };

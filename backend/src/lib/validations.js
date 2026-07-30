@@ -68,4 +68,39 @@ const loginSchema = z.object({
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
 });
 
-export { loginSchema, signupSchema };
+const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, "ID không hợp lệ");
+
+const base64Schema = z
+  .string()
+  .min(1, "Vui lòng chọn ảnh")
+  .refine((val) => /^data:image\/[a-z]+;base64,/.test(val), {
+    message: "Ảnh không đúng định dạng base64",
+  });
+
+const updateProfileSchema = z.object({
+  profilePic: base64Schema,
+});
+
+const sendMessageSchema = z
+  .object({
+    image: base64Schema.optional(),
+    text: z
+      .string()
+      .max(5000, "Tin nhắn không được vượt quá 5000 ký tự")
+      .optional()
+      .or(z.literal("")),
+  })
+  .refine((data) => data.text || data.image, {
+    message: "Vui lòng nhập nội dung tin nhắn hoặc chọn ảnh",
+    path: ["text"],
+  });
+
+const mongoIdSchema = objectIdSchema;
+
+export {
+  loginSchema,
+  mongoIdSchema,
+  sendMessageSchema,
+  signupSchema,
+  updateProfileSchema,
+};
