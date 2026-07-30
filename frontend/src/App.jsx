@@ -8,9 +8,15 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 import { useAuthStore } from "./store/useAuthStore.js";
+import { useThemeStore } from "./store/useThemeStore.js";
 
 function App() {
   const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
+  const { theme } = useThemeStore();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     checkAuth();
