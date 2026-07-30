@@ -3,7 +3,9 @@ import { io } from "socket.io-client";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const SOCKET_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.MODE === "development" ? "http://localhost:5001" : "");
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -24,7 +26,7 @@ export const useAuthStore = create((set, get) => ({
     const { socket } = get();
     if (socket?.connected) return;
 
-    const newSocket = io(BASE_URL, {
+    const newSocket = io(SOCKET_URL, {
       query: { userId },
     });
     newSocket.on("getOnlineUsers", (userIds) => {

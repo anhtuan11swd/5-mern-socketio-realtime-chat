@@ -34,7 +34,8 @@
     "dev": "nodemon src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "predev": "npx kill-port 5001"
+    "predev": "npx kill-port 5001",
+    "start": "node src/index.js"
   },
   "type": "module",
   "version": "1.0.0"
