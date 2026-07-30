@@ -1,1 +1,31 @@
 @import "tailwindcss";
+@plugin "daisyui";
+
+@layer base {
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  input:disabled,
+  input[readonly],
+  select:disabled,
+  textarea:disabled {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  button:disabled,
+  button[aria-disabled="true"],
+  .btn:disabled,
+  .btn[disabled] {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  .link:disabled,
+  a:disabled,
+  a[aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed pointer-events-none no-underline;
+  }
+}

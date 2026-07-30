@@ -1,9 +1,57 @@
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import { Navigate, Route, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import SignupPage from "./pages/SignupPage.jsx";
+import { useAuthStore } from "./store/useAuthStore.js";
+
 function App() {
+  const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <span className="loading loading-spinner loading-lg" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <h1 className="font-bold text-3xl text-blue-600 underline">
-        Hello world!
-      </h1>
+    <div>
+      <Navbar />
+
+      <Routes>
+        <Route
+          element={authUser ? <HomePage /> : <Navigate to="/login" />}
+          path="/"
+        />
+        <Route
+          element={!authUser ? <SignupPage /> : <Navigate to="/" />}
+          path="/signup"
+        />
+        <Route
+          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+          path="/login"
+        />
+        <Route
+          element={authUser ? <SettingsPage /> : <Navigate to="/login" />}
+          path="/settings"
+        />
+        <Route
+          element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
+          path="/profile"
+        />
+      </Routes>
+
+      <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
     </div>
   );
 }
