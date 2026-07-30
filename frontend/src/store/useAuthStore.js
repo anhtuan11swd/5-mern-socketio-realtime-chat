@@ -1,19 +1,42 @@
 import toast from "react-hot-toast";
+import { io } from "socket.io-client";
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 
-export const useAuthStore = create((set) => ({
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+export const useAuthStore = create((set, get) => ({
   authUser: null,
 
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/api/v1/auth/check");
       set({ authUser: res.data });
+      get().connectSocket(res.data._id);
     } catch {
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
     }
+  },
+
+  connectSocket: (userId) => {
+    const { socket } = get();
+    if (socket?.connected) return;
+
+    const newSocket = io(BASE_URL, {
+      query: { userId },
+    });
+    newSocket.on("getOnlineUsers", (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+    set({ socket: newSocket });
+  },
+
+  disconnectSocket: () => {
+    const { socket } = get();
+    if (socket?.connected) socket.disconnect();
+    set({ onlineUsers: [], socket: null });
   },
   isCheckingAuth: true,
   isLoggingIn: false,
@@ -25,6 +48,7 @@ export const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.post("/api/v1/auth/login", data);
       set({ authUser: res.data });
+      get().connectSocket(res.data._id);
       toast.success("Đăng nhập thành công");
       return { success: true };
     } catch (error) {
@@ -38,6 +62,7 @@ export const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
+      get().disconnectSocket();
       await axiosInstance.post("/api/v1/auth/logout");
       set({ authUser: null });
       toast.success("Đăng xuất thành công");
@@ -45,6 +70,7 @@ export const useAuthStore = create((set) => ({
       toast.error(error.response?.data?.message || "Đăng xuất thất bại");
     }
   },
+  onlineUsers: [],
 
   signup: async (data) => {
     set({ isSigningUp: true });
@@ -61,6 +87,7 @@ export const useAuthStore = create((set) => ({
       set({ isSigningUp: false });
     }
   },
+  socket: null,
 
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });

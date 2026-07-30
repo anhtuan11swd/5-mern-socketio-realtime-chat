@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { formatMessageTime } from "../../lib/utils.js";
 import { useAuthStore } from "../../store/useAuthStore.js";
 import { useChatStore } from "../../store/useChatStore.js";
@@ -7,21 +7,32 @@ import MessageInput from "./MessageInput.jsx";
 import NoChatSelected from "./NoChatSelected.jsx";
 
 export default function ChatContainer() {
-  const { selectedUser, getMessages, messages, isMessagesLoading } =
-    useChatStore();
+  const { selectedUser, messages, isMessagesLoading } = useChatStore();
   const { authUser } = useAuthStore();
+  const messageEndRef = useRef(null);
 
   useEffect(() => {
-    if (selectedUser) getMessages(selectedUser._id);
-  }, [selectedUser, getMessages]);
+    if (selectedUser) useChatStore.getState().getMessages(selectedUser._id);
+  }, [selectedUser]);
+
+  useEffect(() => {
+    useChatStore.getState().subscribeToMessages();
+    return () => useChatStore.getState().unsubscribeFromMessages();
+  }, []);
+
+  useEffect(() => {
+    if (messages.length >= 0) {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   if (!selectedUser) return <NoChatSelected />;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <ChatHeader />
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-5">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-5">
         {isMessagesLoading ? (
           <div className="flex items-center justify-center py-10">
             <span className="loading loading-spinner loading-md" />
@@ -71,6 +82,7 @@ export default function ChatContainer() {
             );
           })
         )}
+        <div ref={messageEndRef} />
       </div>
 
       <MessageInput />
