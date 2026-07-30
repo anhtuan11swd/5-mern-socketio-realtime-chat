@@ -1,9 +1,11 @@
 import "dotenv/config";
+import http from "node:http";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { connectDB } from "./lib/db.js";
+import { initializeSocket } from "./lib/socket.js";
 import swaggerSpec from "./lib/swagger.js";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
@@ -24,8 +26,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/messages", messageRoutes);
 
+const httpServer = http.createServer(app);
+initializeSocket(httpServer);
+
 connectDB().then(() => {
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`Máy chủ đang chạy trên cổng ${PORT}`);
     console.log(`Tài liệu API: http://localhost:${PORT}/api-docs`);
   });
