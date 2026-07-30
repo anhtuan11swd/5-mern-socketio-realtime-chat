@@ -1,5 +1,6 @@
 import "dotenv/config";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { connectDB } from "./lib/db.js";
@@ -10,6 +11,12 @@ import messageRoutes from "./routes/message.route.js";
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+app.use(
+  cors({
+    credentials: true,
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 app.get("/api-docs/json", (_req, res) => res.json(swaggerSpec));
