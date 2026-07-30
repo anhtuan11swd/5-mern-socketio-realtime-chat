@@ -17,7 +17,7 @@ app.use(
     origin: process.env.CLIENT_URL || "http://localhost:5173",
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.get("/api-docs/json", (_req, res) => res.json(swaggerSpec));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
